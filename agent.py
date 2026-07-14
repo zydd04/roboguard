@@ -3,6 +3,7 @@
 from smolagents import CodeAgent, LiteLLMModel, tool 
 import subprocess
 import json
+import os
 
 model = LiteLLMModel(
     model_id="ollama_chat/qwen2:7b",
@@ -42,17 +43,35 @@ def scan_bandit(path: str) -> str:
         return "bandit not found. use `pip install bandit`."
     except Exception as e:
         return f"bandit ran into an error while scanning: {str(e)}"
-@tool
-def run_agent(file: str, max_chars: int = 36000) -> str:
-    """"""
 
 agent = CodeAgent(tools=[read_file,scan_bandit], model=model)
+@tool
+def run_agent(file: str, max_chars: int = 36000) -> str:
+    """
+    Runs agent for scanning file returns scan results.
+    Args: file.
+    """
+    prompt = (
+        f"Scan the file at '{file}' for security vulnerabilities.\n"
+        "You are required to follow these steps:\n"
+        "1. Use read_file to read the file.\n"
+        "2. Run scan_bandit on the Python file.\n"
+        "3.  Return ONLY a JSON array where each "
+        "object has exactly these fields: file, line, severity "
+        "(low/medium/high/critical), issue, recommendation."
+    )
+    report = agent.run(prompt)
+    return report
+
 if __name__ == "__main__":
     file = input("Enter the name of the file to be scanned after putting it in the dir:")
-    output = run_agent(file)
-    print("////////// --- SCAN RESULTS : --- /////////")
-    if output:
-        print(json.dumps(output, indent=2))
-        print(f"\nResults Found: {len(output)}")
+    if not os.path.exists(file):
+        print(f"File Not Found.")
     else:
-        print("No Results Found.")
+        output = run_agent(file)
+        print("////////// --- SCAN RESULTS : --- /////////")
+        if output:
+            print(json.dumps(output, indent=2))
+            print(f"\nResults Found: {len(output)}")
+        else:
+            print("No Results Found.")
