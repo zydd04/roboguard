@@ -42,4 +42,17 @@ def scan_bandit(path: str) -> str:
         return "bandit not found. use `pip install bandit`."
     except Exception as e:
         return f"bandit ran into an error while scanning: {str(e)}"
+@tool
+def run_agent(file: str, max_chars: int = 36000) -> str:
+    """"""
+
 agent = CodeAgent(tools=[read_file,scan_bandit], model=model)
+if __name__ == "__main__":
+    file = input("Enter the name of the file to be scanned after putting it in the dir:")
+    output = run_agent(file)
+    print("////////// --- SCAN RESULTS : --- /////////")
+    if output:
+        print(json.dumps(output, indent=2))
+        print(f"\nResults Found: {len(output)}")
+    else:
+        print("No Results Found.")
