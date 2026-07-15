@@ -45,11 +45,10 @@ def scan_bandit(path: str) -> str:
         return f"bandit ran into an error while scanning: {str(e)}"
 
 agent = CodeAgent(tools=[read_file,scan_bandit], model=model)
-@tool
+
 def run_agent(file: str, max_chars: int = 36000) -> str:
     """
     Runs agent for scanning file returns scan results.
-    Args: file.
     """
     prompt = (
         f"Scan the file at '{file}' for security vulnerabilities.\n"
@@ -59,6 +58,9 @@ def run_agent(file: str, max_chars: int = 36000) -> str:
         "3.  Return ONLY a JSON array where each "
         "object has exactly these fields: file, line, severity "
         "(low/medium/high/critical), issue, recommendation."
+        "Execute your tools, gather the findings, and then "
+        "immediately provide your final answer. Do not create new steps "
+        "once you have the scanner output."
     )
     report = agent.run(prompt)
     return report
